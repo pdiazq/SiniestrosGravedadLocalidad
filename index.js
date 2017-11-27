@@ -2,7 +2,7 @@
 (function() {
   var DIST, SIDE, height, svg, vis, width;
 
-  SIDE = 15;
+  SIDE = 11;
 
   DIST = 19;
 
