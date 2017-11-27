@@ -19,9 +19,9 @@
     {"name":"TUNJUELITO","group":1},
     {"name":"USAQUEN","group":1},
     {"name":"USME","group":1},
-    {"name":"Con Muertos","group":1},
-    {"name":"Con Heridos","group":1},
-    {"name":"Solo Daños","group":1}    
+    {"name":"CON MUERTOS","group":1},
+    {"name":"CON HERIDOS","group":1},
+    {"name":"SOLO DAÑOS","group":1}    
   ],
   "links":[
     {"source":19,"target":0,"value":49},
