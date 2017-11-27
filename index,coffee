@@ -1,0 +1,294 @@
+SIDE = 7
+DIST = 8
+
+svg = d3.select('svg')
+width = svg.node().getBoundingClientRect().width
+height = svg.node().getBoundingClientRect().height
+
+vis = svg.append('g')
+  .attr
+    transform: "translate(#{width/2}, #{height-10})"
+
+d3.json 'miserables.json', (data) ->
+  length = data.nodes.length
+
+  cellsize = d3.scale.sqrt()
+    .domain([0, d3.max data.links, (d) -> d.value])
+    .range([0,SIDE/2])
+
+  # objectify the graph
+  data.links.forEach (l) ->
+    l.source = data.nodes[l.source]
+    l.target = data.nodes[l.target]
+
+  # store the index of the node within its object, in order to use it when placing link cells
+  data.nodes.forEach (d, i) ->
+    d.i = i
+
+  # create the cursors
+  cursor_x = vis.append('line')
+    .style
+      display: 'none'
+    .attr
+      class: 'cursor x'
+      transform: 'rotate(-45)'
+
+  cursor_x2 = vis.append('line')
+    .style
+      display: 'none'
+    .attr
+      class: 'cursor x'
+      transform: 'rotate(-45)'
+
+  cursor_xcurve = vis.append('path')
+    .style
+      display: 'none'
+    .attr
+      class: 'cursor x'
+      d: "M0 #{-SIDE/2} C0 #{-SIDE/6} #{SIDE/6} 0 #{SIDE/2} 0"
+
+  cursor_y = vis.append('line')
+    .style
+      display: 'none'
+    .attr
+      class: 'cursor y'
+      transform: 'rotate(-45)'
+
+  cursor_y2 = vis.append('line')
+    .style
+      display: 'none'
+    .attr
+      class: 'cursor y'
+      transform: 'rotate(-45)'
+
+  cursor_ycurve = vis.append('path')
+    .style
+      display: 'none'
+    .attr
+      class: 'cursor y'
+      d: "M0 #{-SIDE/2} C0 #{-SIDE/6} #{SIDE/6} 0 #{SIDE/2} 0"
+
+  # draw the cells containing data
+  cells = vis.selectAll('.cell')
+    .data(data.links)
+
+  cells.enter().append('circle')
+    .attr
+      class: 'cell'
+      r: (d) -> cellsize(d.value)
+      transform: (d) -> "rotate(-45) translate(#{(d.source.i-length/2)*DIST},#{(d.target.i-length/2)*DIST})"
+
+  # draw the labels
+  PAD = 4
+  labels_a = vis.selectAll('.label_a')
+    .data(data.nodes.slice(1)) # first label is useless, the diagonal is not shown
+
+  labels_a.enter().append('text')
+    .each((d) -> d.label_a = d3.select(this))
+    .text((d) -> d.name)
+    .attr
+      class: 'label label_a'
+      dy: '0.35em'
+      transform: (d) -> "rotate(45) translate(#{-length/2*DIST-PAD-DIST/2},#{(-d.i+length/2)*DIST})"
+    .on 'mouseenter', (d) ->
+      d.label_a.classed('highlighted_x', true) if d.label_a?
+      d.label_b.classed('highlighted_x', true) if d.label_b?
+
+      cursor_x
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.i-length/2)*DIST
+          x2: (d.i-length/2)*DIST
+          y1: (-length/2-0.5)*DIST
+          y2: (d.i-length/2-0.5)*DIST
+
+      cursor_x2
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.i-length/2+0.5)*DIST
+          x2: (+length/2-0.5)*DIST
+          y1: (d.i-length/2)*DIST
+          y2: (d.i-length/2)*DIST
+
+      if d.label_b?
+        cursor_xcurve
+          .style
+            display: 'inline'
+          .attr
+            transform: "rotate(-45) translate(#{(d.i-length/2)*DIST}, #{(d.i-length/2)*DIST})"
+
+
+    .on 'mouseleave', (d) ->
+      d.label_a.classed('highlighted_x', false) if d.label_a?
+      d.label_b.classed('highlighted_x', false) if d.label_b?
+
+      cursor_x
+        .style
+          display: 'none'
+
+      cursor_x2
+        .style
+          display: 'none'
+
+      cursor_xcurve
+        .style
+          display: 'none'
+
+  labels_b = vis.selectAll('.label_b')
+    .data(data.nodes.slice(0,-1)) # last label is useless, the diagonal is not shown
+
+  labels_b.enter().append('text')
+    .each((d) -> d.label_b = d3.select(this))
+    .text((d) -> d.name)
+    .attr
+      class: 'label label_b'
+      dy: '0.35em'
+      transform: (d) -> "rotate(-45) translate(#{length/2*DIST+PAD-DIST/2},#{(d.i-length/2)*DIST})"
+    .on 'mouseenter', (d) ->
+      d.label_a.classed('highlighted_y', true) if d.label_a?
+      d.label_b.classed('highlighted_y', true) if d.label_b?
+
+      cursor_y
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.i-length/2+0.5)*DIST
+          x2: (+length/2-0.5)*DIST
+          y1: (d.i-length/2)*DIST
+          y2: (d.i-length/2)*DIST
+
+      cursor_y2
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.i-length/2)*DIST
+          x2: (d.i-length/2)*DIST
+          y1: (-length/2-0.5)*DIST
+          y2: (d.i-length/2-0.5)*DIST
+
+      if d.label_a?
+        cursor_ycurve
+          .style
+            display: 'inline'
+          .attr
+            transform: "rotate(-45) translate(#{(d.i-length/2)*DIST}, #{(d.i-length/2)*DIST})"
+
+    .on 'mouseleave', (d) ->
+      d.label_a.classed('highlighted_y', false) if d.label_a?
+      d.label_b.classed('highlighted_y', false) if d.label_b?
+
+      cursor_y
+        .style
+          display: 'none'
+
+      cursor_y2
+        .style
+          display: 'none'
+
+      cursor_ycurve
+        .style
+          display: 'none'
+
+  # create "interactive" cells to show the cursors
+  icells = []
+  d3.range(0, length).forEach (y) ->
+    d3.range(y+1, length).forEach (x) ->
+      icells.push {x: x, y: y, source: data.nodes[x], target: data.nodes[y]}
+
+  interactive_cells = vis.selectAll('.interactive_cell')
+    .data(icells)
+
+  interactive_cells.enter().append('rect')
+    .attr
+      class: 'interactive_cell'
+      x: -DIST/2
+      y: -DIST/2
+      width: DIST
+      height: DIST
+      transform: (d) -> "rotate(-45) translate(#{(d.x-length/2)*DIST},#{(d.y-length/2)*DIST})"
+    .on 'mouseenter', (d) ->
+      d.source.label_a.classed('highlighted_x', true) if d.source.label_a?
+      d.target.label_a.classed('highlighted_y', true) if d.target.label_a?
+      d.source.label_b.classed('highlighted_x', true) if d.source.label_b?
+      d.target.label_b.classed('highlighted_y', true) if d.target.label_b?
+      cursor_x
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.x-length/2)*DIST
+          x2: (d.x-length/2)*DIST
+          y1: (-length/2-0.5)*DIST
+          y2: (d.x-length/2-0.5)*DIST
+
+      cursor_x2
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.x-length/2+0.5)*DIST
+          x2: (+length/2-0.5)*DIST
+          y1: (d.x-length/2)*DIST
+          y2: (d.x-length/2)*DIST
+
+      cursor_y
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.y-length/2+0.5)*DIST
+          x2: (+length/2-0.5)*DIST
+          y1: (d.y-length/2)*DIST
+          y2: (d.y-length/2)*DIST
+
+      cursor_y2
+        .style
+          display: 'inline'
+        .attr
+          x1: (d.y-length/2)*DIST
+          x2: (d.y-length/2)*DIST
+          y1: (-length/2-0.5)*DIST
+          y2: (d.y-length/2-0.5)*DIST
+
+      if d.source.label_b?
+        cursor_xcurve
+          .style
+            display: 'inline'
+          .attr
+            transform: "rotate(-45) translate(#{(d.x-length/2)*DIST}, #{(d.x-length/2)*DIST})"
+
+      if d.target.label_a?
+        cursor_ycurve
+          .style
+            display: 'inline'
+          .attr
+            transform: "rotate(-45) translate(#{(d.y-length/2)*DIST}, #{(d.y-length/2)*DIST})"
+
+    .on 'mouseleave', (d) ->
+      d.source.label_a.classed('highlighted_x', false) if d.source.label_a?
+      d.target.label_a.classed('highlighted_y', false) if d.target.label_a?
+      d.source.label_b.classed('highlighted_x', false) if d.source.label_b?
+      d.target.label_b.classed('highlighted_y', false) if d.target.label_b?
+
+      cursor_x
+        .style
+          display: 'none'
+
+      cursor_x2
+        .style
+          display: 'none'
+
+      cursor_xcurve
+        .style
+          display: 'none'
+
+      cursor_y
+        .style
+          display: 'none'
+
+      cursor_y2
+        .style
+          display: 'none'
+
+      cursor_ycurve
+        .style
+          display: 'none'

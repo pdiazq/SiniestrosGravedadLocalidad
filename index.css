@@ -1,0 +1,42 @@
+@font-face {
+  font-family: "Lacuna";
+  src: url("lacuna.ttf");
+}
+
+.label {
+  font-family: "Lacuna";
+  font-size: 8px;
+}
+.highlighted_x.label {
+  font-weight: bold;
+  fill: #E21975;
+}
+.highlighted_y.label {
+  font-weight: bold;
+  fill: #FF7100;
+}
+.label_a {
+  text-anchor: end;
+}
+
+.cell {
+  fill: #2272C0;
+}
+.interactive_cell {
+  fill: transparent;
+}
+.interactive_cell:hover {
+  stroke: #FF3B1C;
+}
+
+.cursor {
+  fill: none;
+  stroke-width: 0.5;
+  stroke-linecap: square;
+}
+.cursor.x {
+    stroke: #E21975;
+}
+.cursor.y {
+    stroke: #FF7100;
+}
